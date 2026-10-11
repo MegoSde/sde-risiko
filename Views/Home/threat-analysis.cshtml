@@ -1,25 +1,17 @@
-<p>Beskriv et konkret angrebsscenarie for hvert fund. Sandsynlighed går fra 1 (lav) til 5 (høj).</p>
-<p>Ved skift af teknik erstattes fundets Controls med den nye tekniks katalogforslag.</p>
+<p>Vælg et startpunkt fra Attack Surface. Fortsæt derefter fra en kompromitteret komponent via udgående relationer i Asset Model.</p>
 <section>
-<h2>ATT&amp;CK-fund</h2>
-<form id="threat-form">
-<input type="hidden" name="id">
-<label>Systemasset<select name="systemAssetId" required>
-</select>
-</label>
-<label>ATT&amp;CK-teknik<select name="attackTechniqueId" required>
-</select>
-</label>
-<div id="technique-info">
-</div>
-<label>Scenarie<textarea name="scenario" required>
-</textarea>
-</label>
-<label>Sandsynlighed<input name="likelihood" type="number" min="1" max="5" value="1" required>
-</label>
-<button>Gem fund</button>
-<button type="reset">Annuller redigering</button>
+<h2>Opret startkomponent</h2>
+<p id="start-empty" hidden>Vælg først et asset på <a href="/attack-surface">Attack Surface</a>.</p>
+<form id="start-component-form">
+<fieldset>
+<label>Attack Surface asset<select name="systemAssetId" required></select></label>
+<div class="component-picker"></div>
+<label>Likelihood<input name="likelihood" type="number" min="1" max="5" value="3" required></label>
+<label>Kommentar<textarea name="comment" maxlength="4000" rows="1"></textarea></label>
+<p data-existing class="muted"></p>
+<button type="submit">Opret startkomponent</button>
+</fieldset>
 </form>
 </section>
-<div id="threat-list">
-</div>
+<section><h2>Attack Components</h2><div id="component-list"></div></section>
+<div id="selected-component"></div>

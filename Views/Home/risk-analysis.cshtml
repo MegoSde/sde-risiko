@@ -1,4 +1,7 @@
-<p id="risk-formula">Risikoscore = Blast Radius × sandsynlighed.</p>
-<p>Åbn en risiko for at se grundlaget.</p>
-<div id="risk-list">
-</div>
+<p>Ét risikoscenarie pr. startkomponent fra Attack Surface: Entry Point + ATT&amp;CK Technique.</p>
+<p>Path Likelihood = MIN af trinene. Scenario Likelihood = MAX af de afsluttede paths. Risk Score = Consequence Index × Scenario Likelihood.</p>
+<p>Business Assets tælles én gang. For et delt asset summeres konsekvenserne fra dets tilknyttede processer.</p>
+<button id="refresh-risks" type="button">Opdatér analyse</button>
+<p id="risk-count" role="status"></p>
+<div id="risk-list"></div>
+<section id="risk-details" aria-label="Risikoscenariets beregninger" tabindex="-1" hidden></section>

@@ -5,10 +5,13 @@ namespace AlpacaMedic.Data;
 
 public static class SeedData
 {
-    // Small, local teaching catalog. Mappings are suggestions, not official CIS/MITRE mappings.
+    // Local CIS teaching catalog and case. Mappings are suggestions, not official CIS/MITRE mappings.
     public static async Task Initialize(RiskDb db)
     {
         await using var transaction = await db.Database.BeginTransactionAsync();
+        await BusinessAssetConsolidation.Initialize(db);
+        // Only seed the case on a pristine installation; never mix demo rows into an existing analysis.
+        var seedDemo = !await db.CisControls.AnyAsync() && !await db.BusinessProcesses.AnyAsync() && !await db.BusinessAssets.AnyAsync() && !await db.SystemAssets.AnyAsync();
         if (!await db.CisControls.AnyAsync())
         {
             db.CisControls.Add(new CisControl { Id = 1, Number = 1,
@@ -68,46 +71,96 @@ public static class SeedData
             await db.SaveChangesAsync();
         }
 
-        if (!await db.AttackTechniques.AnyAsync())
+        // Teaching suggestions are separate from the official MITRE catalog.
+        var suggestions = new Dictionary<string, int[]>
         {
-            db.AttackTechniques.Add(new AttackTechnique
-            {
-                Id = 1, TechniqueId = "T1190",
-                Name = "Exploit Public-Facing Application",
-                Tactic = "Initial Access",
-                Description = "Angriberen udnytter en sårbarhed i en offentligt tilgængelig applikation.",
-                MitreUrl = "https://attack.mitre.org/techniques/T1190/"
-            });
-            db.AttackTechniques.Add(new AttackTechnique
-            {
-                Id = 2, TechniqueId = "T1078",
-                Name = "Valid Accounts",
-                Tactic = "Initial Access, Persistence, Privilege Escalation, Defense Evasion",
-                Description = "Angriberen misbruger gyldige konti til adgang eller fortsat tilstedeværelse.",
-                MitreUrl = "https://attack.mitre.org/techniques/T1078/"
-            });
-            db.AttackTechniques.Add(new AttackTechnique
-            {
-                Id = 3, TechniqueId = "T1059",
-                Name = "Command and Scripting Interpreter",
-                Tactic = "Execution",
-                Description = "Angriberen bruger kommandofortolkere eller scripts til at udføre handlinger.",
-                MitreUrl = "https://attack.mitre.org/techniques/T1059/"
-            });
-            await db.SaveChangesAsync();
-
-            db.TechniqueControls.Add(new AttackTechniqueCisControl { AttackTechniqueId = 1, CisControlId = 7 });
-            db.TechniqueControls.Add(new AttackTechniqueCisControl { AttackTechniqueId = 1, CisControlId = 16 });
-            db.TechniqueControls.Add(new AttackTechniqueCisControl { AttackTechniqueId = 1, CisControlId = 18 });
-            db.TechniqueControls.Add(new AttackTechniqueCisControl { AttackTechniqueId = 2, CisControlId = 5 });
-            db.TechniqueControls.Add(new AttackTechniqueCisControl { AttackTechniqueId = 2, CisControlId = 6 });
-            db.TechniqueControls.Add(new AttackTechniqueCisControl { AttackTechniqueId = 2, CisControlId = 8 });
-            db.TechniqueControls.Add(new AttackTechniqueCisControl { AttackTechniqueId = 3, CisControlId = 2 });
-            db.TechniqueControls.Add(new AttackTechniqueCisControl { AttackTechniqueId = 3, CisControlId = 4 });
-            db.TechniqueControls.Add(new AttackTechniqueCisControl { AttackTechniqueId = 3, CisControlId = 10 });
-            db.TechniqueControls.Add(new AttackTechniqueCisControl { AttackTechniqueId = 3, CisControlId = 13 });
-            await db.SaveChangesAsync();
+            ["T1190"] = [7, 16, 18], ["T1078"] = [5, 6, 8], ["T1059"] = [2, 4, 10, 13]
+        };
+        foreach (var (techniqueId, controls) in suggestions)
+        {
+            var technique = await db.AttackTechniques.SingleOrDefaultAsync(x => x.TechniqueId == techniqueId);
+            if (technique == null) continue;
+            foreach (var controlId in controls)
+                if (!await db.TechniqueControls.AnyAsync(x => x.AttackTechniqueId == technique.Id && x.CisControlId == controlId))
+                    db.TechniqueControls.Add(new AttackTechniqueCisControl { AttackTechniqueId = technique.Id, CisControlId = controlId });
         }
+        await db.SaveChangesAsync();
+        if (seedDemo)
+            await SeedAssetModel(db);
         await transaction.CommitAsync();
     }
+
+    private static async Task SeedAssetModel(RiskDb db)
+    {
+        var clinical = new BusinessProcess { Name = "Clinical Care and Follow-up", Confidentiality = 3, Integrity = 3, Availability = 3 };
+        var safety = new BusinessProcess { Name = "Adverse Event Reporting", Confidentiality = 3, Integrity = 3, Availability = 2 };
+        var research = new BusinessProcess { Name = "Research", Confidentiality = 3, Integrity = 3, Availability = 2 };
+        var employees = new BusinessProcess { Name = "Employee Administration", Confidentiality = 3, Integrity = 2, Availability = 2 };
+        foreach (var process in new[] { clinical, safety, research, employees })
+        {
+            process.Consequence = Services.ConsequenceService.Calculate(process.Confidentiality, process.Integrity, process.Availability);
+            db.BusinessProcesses.Add(process);
+        }
+        await db.SaveChangesAsync();
+        var business = new[]
+        {
+            new BusinessAsset { Name = "Clinical Patient Data", NormalizedName = BusinessAsset.NameKey("Clinical Patient Data") },
+            new BusinessAsset { Name = "Patient Identity", NormalizedName = BusinessAsset.NameKey("Patient Identity") },
+            new BusinessAsset { Name = "Adverse Event Data", NormalizedName = BusinessAsset.NameKey("Adverse Event Data") },
+            new BusinessAsset { Name = "Research Data", NormalizedName = BusinessAsset.NameKey("Research Data") },
+            new BusinessAsset { Name = "Employee Identity", NormalizedName = BusinessAsset.NameKey("Employee Identity") }
+        };
+        db.BusinessAssets.AddRange(business);
+        var systems = new[]
+        {
+            new SystemAsset { Name = "PatientWebApp", AssetType = "Application" },
+            new SystemAsset { Name = "WEB01", AssetType = "Host" },
+            new SystemAsset { Name = "PostgreSQLDB01", AssetType = "Service" },
+            new SystemAsset { Name = "DB01", AssetType = "Host" },
+            new SystemAsset { Name = "FreeIPA", AssetType = "Service" },
+            new SystemAsset { Name = "IPA01", AssetType = "Host" },
+            new SystemAsset { Name = "WAZUH", AssetType = "Service" },
+            new SystemAsset { Name = "WAZUH01", AssetType = "Host" },
+            new SystemAsset { Name = "DMZ", AssetType = "Network" },
+            new SystemAsset { Name = "OfficeNetwork", AssetType = "Network" },
+            new SystemAsset { Name = "OfficePC", AssetType = "Endpoint" },
+            new SystemAsset { Name = "Firewall", AssetType = "Network" },
+            new SystemAsset { Name = "CloudMail", AssetType = "CloudService" }
+        };
+        db.SystemAssets.AddRange(systems);
+        await db.SaveChangesAsync();
+        var processIds = new[] { clinical.Id, clinical.Id, safety.Id, research.Id, employees.Id };
+        for (var i = 0; i < business.Length; i++)
+            db.BusinessProcessAssets.Add(new BusinessProcessAsset { BusinessAssetId = business[i].Id, BusinessProcessId = processIds[i] });
+        var systemByName = systems.ToDictionary(x => x.Name);
+        foreach (var asset in business)
+            db.BusinessAssetRelations.Add(new BusinessAssetSystemRelation
+            {
+                BusinessAssetId = asset.Id,
+                SystemAssetId = systemByName[asset.Name == "Employee Identity" ? "FreeIPA" : "PostgreSQLDB01"].Id,
+                RelationType = asset.Name == "Employee Identity" ? "ProcessedBy" : "StoredIn"
+            });
+        var relations = new (string Source, string Type, string Target)[]
+        {
+            ("PatientWebApp", "HostedOn", "WEB01"),
+            ("PatientWebApp", "ConnectsTo", "PostgreSQLDB01"),
+            ("PatientWebApp", "AuthenticatesVia", "FreeIPA"),
+            ("PostgreSQLDB01", "HostedOn", "DB01"),
+            ("FreeIPA", "HostedOn", "IPA01"),
+            ("WAZUH", "HostedOn", "WAZUH01"),
+            ("WEB01", "LocatedIn", "DMZ"),
+            ("DB01", "LocatedIn", "DMZ"),
+            ("IPA01", "LocatedIn", "DMZ"),
+            ("OfficePC", "LocatedIn", "OfficeNetwork")
+        };
+        foreach (var (source, type, target) in relations)
+            db.SystemAssetRelations.Add(new SystemAssetRelation
+            {
+                SourceSystemAssetId = systemByName[source].Id,
+                TargetSystemAssetId = systemByName[target].Id,
+                RelationType = type
+            });
+        await db.SaveChangesAsync();
+    }
+
 }

@@ -394,3 +394,179 @@ footer {
     padding: 6px;
   }
 }
+
+/* Spreadsheet editing on the business analysis page. */
+.process-sheet table {
+  min-width: 650px;
+}
+.process-sheet td {
+  padding: 7px;
+}
+.process-sheet th:first-child {
+  width: 50%;
+}
+.process-sheet th:nth-child(6) {
+  width: 50%;
+}
+.process-sheet input[data-field],
+.process-sheet textarea {
+  border-color: transparent;
+  background: transparent;
+  padding: 6px;
+}
+.process-sheet input[data-field]:hover,
+.process-sheet textarea:hover {
+  border-color: var(--line);
+}
+.process-sheet input[data-field]:focus,
+.process-sheet textarea:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.process-sheet input[type="number"] {
+  width: 3.5rem;
+}
+.process-sheet textarea {
+  min-height: 38px;
+  resize: none;
+  overflow: hidden;
+  color: var(--muted);
+}
+.asset-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+.asset-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #eaf0f4;
+  overflow-wrap: anywhere;
+}
+.asset-tag .remove-tag {
+  padding: 0 3px;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+.process-sheet .add-process-row input {
+  max-width: none;
+  border-style: dashed;
+}
+
+.process-sheet th:nth-child(n+2):nth-child(-n+5),
+.process-sheet th:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+.process-sheet th:nth-child(5) {
+  cursor: help;
+}
+.process-sheet .delete-process {
+  padding: 2px 6px;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+.process-sheet input.unsaved,
+.process-sheet textarea.unsaved,
+.asset-name-form input.unsaved {
+  color: #865300;
+  background: var(--medium);
+  border-color: #d58d20;
+}
+
+#asset-model article {
+  padding: 16px;
+}
+#asset-model h3 {
+  margin-top: 0;
+}
+.model-relations {
+  list-style: none;
+  padding: 0;
+}
+.model-relations li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.relation-direction {
+  overflow-wrap: anywhere;
+}
+.relation-type {
+  color: var(--accent);
+  font-weight: 600;
+}
+.model-relations p {
+  color: var(--muted);
+  white-space: pre-wrap;
+  margin: 5px 0;
+}
+.relation-editor {
+  margin-top: 14px;
+}
+.relation-editor form {
+  max-width: 650px;
+}
+
+.asset-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+#asset-model .asset-heading h3 {
+  margin: 0;
+}
+.asset-name-form {
+  max-width: 650px;
+}
+.asset-processes {
+  padding-left: 24px;
+}
+
+.surface-summary { display: flex; flex-wrap: wrap; gap: 12px 28px; }
+.surface-summary div { display: flex; gap: 8px; }
+.surface-summary dd { margin: 0; font-weight: bold; }
+.surface-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.surface-filters label { flex: 1 1 200px; }
+.surface-assets { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
+.surface-assets article[hidden] { display: none; }
+.surface-assets h2 { font-size: 1.2rem; overflow-wrap: anywhere; }
+.surface-assets textarea { resize: none; min-height: 42px; overflow: hidden; }
+.surface-assets input.unsaved, .surface-assets select.unsaved, .surface-assets textarea.unsaved { color: #865300; background: var(--medium); border-color: #d58d20; }
+.surface-assets article.unsaved { border-color: #d58d20; }
+.surface-status { min-height: 1.3em; font-size: .9rem; }
+
+.technique-results { max-width: 650px; max-height: 320px; overflow-y: auto; }
+.technique-results button { display: block; width: 100%; text-align: left; margin: 4px 0; background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.technique-results button span { display: block; margin-top: 4px; color: var(--muted); }
+#technique-info p { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+#start-component-form textarea, #component-assessment textarea, .next-component-form textarea { resize: none; min-height: 42px; overflow: hidden; }
+#component-assessment input.unsaved, #component-assessment textarea.unsaved { color: #865300; background: var(--medium); border-color: #d58d20; }
+.next-components { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); align-items: start; }
+.attack-links li { margin: 12px 0; }
+#component-list td { overflow-wrap: anywhere; }
+
+.control-attack > summary { padding: 4px 0; }
+.control-attack-title { font-weight: 600; font-size: 1.1rem; overflow-wrap: anywhere; }
+.control-selection { display: block; margin: 8px 0 0; font-size: .9rem; color: var(--muted); }
+.control-attack[open] > summary .control-selection { display: none; }
+
+.risk-scenarios tbody tr { cursor: pointer; }
+.risk-scenarios tbody tr:hover { background: #f3f7fa; }
+.risk-paths { padding-left: 24px; }
+.risk-path { overflow-wrap: anywhere; line-height: 1.8; }
+.risk-calculations dd { margin-bottom: 18px; }
+#risk-details { scroll-margin-top: 20px; }
+.matrix caption { text-align: left; font-weight: 600; padding: 10px 0; }

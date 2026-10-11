@@ -22,9 +22,9 @@ def request(path, method='GET', data=None, status=200):
     return raw.decode()
 
 
-process_ids, system_ids = [], []
+process_ids, system_ids, asset_ids = [], [], []
 try:
-    pages = ['dashboard', 'business-analysis', 'asset-mapping', 'system-analysis',
+    pages = ['dashboard', 'business-analysis', 'asset-model', 'attack-surface',
              'threat-analysis', 'controls', 'risk-analysis', 'risk-matrix', 'cis-priorities', 'report']
     for page in pages:
         html = request('/' + page)
@@ -34,9 +34,11 @@ try:
     request('/css/site.css')
     request('/js/common.js')
     request('/unknown-page', status=404)
-    for endpoint in ['business-processes', 'business-assets', 'system-assets', 'asset-mappings',
-                     'system-access', 'system-threats', 'attack-techniques', 'cis-controls',
-                     'technique-controls', 'threat-controls', 'risks', 'risk-levels', 'cis-priorities', 'dashboard']:
+    assert '<h1>Asset Model</h1>' in request('/asset-mapping')
+    request('/api/asset-mappings', status=404)
+    for endpoint in ['attack-surface', 'business-processes', 'business-assets', 'system-assets', 'business-asset-relations', 'system-asset-relations',
+                     'attack-components', 'attack-connections', 'attack-techniques', 'cis-controls',
+                     'technique-controls', 'component-controls', 'risks', 'cis-priorities', 'dashboard']:
         request('/api/' + endpoint)
     assert len(request('/api/cis-controls')) == 18
     assert len(request('/api/attack-techniques')) >= 3
@@ -56,82 +58,82 @@ try:
     request('/api/business-processes', 'POST', {'name': '   '}, 400)
     assets = [request('/api/business-assets', 'POST', {
         'name': 'Smoke patientdata ' + str(n), 'businessProcessId': process['id']}, 201) for n in range(2)]
+    asset_ids.extend(a['id'] for a in assets)
     request('/api/business-assets/' + str(assets[0]['id']), 'PUT', {
         'name': 'Smoke journaler', 'businessProcessId': process['id']})
     request('/api/business-assets', 'POST', {'name': 'Invalid', 'businessProcessId': -1}, 400)
+    second_process = request('/api/business-processes', 'POST', {'name': 'Smoke shared asset process'}, 201)
+    process_ids.append(second_process['id'])
+    shared = request('/api/business-assets', 'POST', {'name': ' SMOKE JOURNALER ', 'businessProcessId': second_process['id'], 'description': 'Do not overwrite'}, 201)
+    assert shared['id'] == assets[0]['id'] and shared['name'] == 'Smoke journaler'
+    assert shared['businessProcessIds'] == sorted([process['id'], second_process['id']])
+    again = request('/api/business-assets', 'POST', {'name': 'smoke journaler', 'businessProcessId': second_process['id']}, 201)
+    assert again == shared
+    request('/api/business-assets/' + str(shared['id']), 'PUT', {'name': assets[1]['name']}, 400)
+    request('/api/business-assets/' + str(shared['id']), 'PUT', {'name': '   '}, 400)
+    renamed = request('/api/business-assets/' + str(shared['id']), 'PUT', {'name': 'Smoke shared renamed'})
+    assert renamed['businessProcessIds'] == shared['businessProcessIds']
+    request('/api/business-assets/' + str(shared['id']) + '/processes/' + str(second_process['id']), 'DELETE', status=204)
+    assert next(a for a in request('/api/business-assets') if a['id'] == shared['id'])['businessProcessIds'] == [process['id']]
+    request('/api/business-assets/' + str(shared['id']) + '/processes/' + str(second_process['id']), 'DELETE', status=404)
+    request('/api/business-assets', 'POST', {'name': 'Smoke shared renamed', 'businessProcessId': second_process['id']}, 201)
+    request('/api/business-processes/' + str(second_process['id']), 'DELETE', status=204)
+    process_ids.remove(second_process['id'])
+    assert next(a for a in request('/api/business-assets') if a['id'] == shared['id'])['businessProcessIds'] == [process['id']]
+
     system = request('/api/system-assets', 'POST', {
-        'name': 'Smoke WEB01', 'assetType': 'Server', 'zone': 'DMZ',
-        'blastRadius': 2.5, 'blastRadiusReason': 'Adgang til patientdata'}, 201)
+        'name': 'Smoke WEB01', 'assetType': 'Host',
+        'description': 'Adgang til patientdata'}, 201)
     system_ids.append(system['id'])
-    target = request('/api/system-assets', 'POST', {'name': 'Smoke DB01', 'assetType': 'Server'}, 201)
+    target = request('/api/system-assets', 'POST', {'name': 'Smoke DB01', 'assetType': 'Host'}, 201)
     system_ids.append(target['id'])
-    request('/api/system-assets', 'POST', {'name': 'Invalid', 'blastRadius': 2.2}, 400)
-    request('/api/system-assets', 'POST', {'name': 'Invalid', 'blastRadius': 4}, 400)
     request('/api/system-assets', 'POST', {'name': 'Invalid', 'assetType': 'Invented'}, 400)
     for asset in assets:
-        mapping = request('/api/asset-mappings', 'POST', {
+        business_relation = request('/api/business-asset-relations', 'POST', {
             'businessAssetId': asset['id'], 'systemAssetId': system['id']}, 201)
-    duplicate = request('/api/asset-mappings', 'POST', {
-        'businessAssetId': assets[-1]['id'], 'systemAssetId': system['id']})
-    assert duplicate['id'] == mapping['id']
+    relation_data = {'businessAssetId': assets[-1]['id'], 'systemAssetId': system['id'], 'relationType': 'DependsOn'}
+    request('/api/business-asset-relations', 'POST', relation_data, 400)
+    other = request('/api/business-asset-relations', 'POST', dict(relation_data, relationType='StoredIn'), 201)
+    request('/api/business-asset-relations/' + str(other['id']), 'PUT', relation_data, 400)
+    other = request('/api/business-asset-relations/' + str(other['id']), 'PUT', dict(relation_data, relationType='UsedBy', description='Updated'), 200)
+    assert other['description'] == 'Updated'
+    assert {r['businessAssetId'] for r in request('/api/business-asset-relations?businessAssetId=' + str(assets[-1]['id']))} == {assets[-1]['id']}
+    for invalid in [dict(relation_data, businessAssetId=-1), dict(relation_data, systemAssetId=-1), dict(relation_data, relationType='HostedOn'), dict(relation_data, relationType=''), dict(relation_data, relationType=None)]:
+        request('/api/business-asset-relations', 'POST', invalid, 400)
+    request('/api/business-asset-relations/999999', 'PUT', relation_data, 400)  # Existing triple is rejected first.
+    request('/api/business-asset-relations/999999', 'PUT', dict(relation_data, relationType='Other'), 404)
+    request('/api/business-asset-relations/' + str(other['id']), 'DELETE', status=204)
+    system_relation_data = {'sourceSystemAssetId': system['id'], 'targetSystemAssetId': target['id'], 'relationType': 'ConnectsTo'}
+    system_relation = request('/api/system-asset-relations', 'POST', system_relation_data, 201)
+    request('/api/system-asset-relations', 'POST', system_relation_data, 400)
+    reverse = request('/api/system-asset-relations', 'POST', dict(system_relation_data, sourceSystemAssetId=target['id'], targetSystemAssetId=system['id']), 201)
+    same_pair = request('/api/system-asset-relations', 'POST', dict(system_relation_data, relationType='DependsOn'), 201)
+    request('/api/system-asset-relations/' + str(same_pair['id']), 'PUT', system_relation_data, 400)
+    request('/api/system-asset-relations/' + str(same_pair['id']), 'DELETE', status=204)
+    system_relation = request('/api/system-asset-relations/' + str(system_relation['id']), 'PUT', dict(system_relation_data, relationType='Uses', description='Changed'), 200)
+    assert system_relation['description'] == 'Changed'
+    assert request('/api/system-asset-relations?sourceSystemAssetId=' + str(system['id'])) == [system_relation]
+    for invalid in [dict(system_relation_data, sourceSystemAssetId=-1), dict(system_relation_data, targetSystemAssetId=-1), dict(system_relation_data, targetSystemAssetId=system['id']), dict(system_relation_data, relationType='StoredIn'), dict(system_relation_data, relationType=''), dict(system_relation_data, relationType=None)]:
+        request('/api/system-asset-relations', 'POST', invalid, 400)
+        request('/api/system-asset-relations/' + str(system_relation['id']), 'PUT', invalid, 400)
+    request('/api/system-asset-relations/999999', 'PUT', system_relation_data, 404)
+    request('/api/system-asset-relations/' + str(reverse['id']), 'DELETE', status=204)
+    assert not any(r['id'] == reverse['id'] for r in request('/api/system-asset-relations'))
     summary = next(s for s in request('/api/system-assets') if s['id'] == system['id'])
-    assert summary['directConsequence'] == 5, 'Do not count the same process twice'
-    access = request('/api/system-access', 'POST', {
-        'sourceSystemAssetId': system['id'], 'targetSystemAssetId': target['id'],
-        'description': 'Servicekonto'}, 201)
-    request('/api/system-access', 'POST', {
-        'sourceSystemAssetId': system['id'], 'targetSystemAssetId': system['id']}, 400)
-    access = request('/api/system-access', 'POST', {
-        'sourceSystemAssetId': system['id'], 'targetSystemAssetId': target['id'], 'description': 'Opdateret'})
-    assert access['description'] == 'Opdateret'
-    technique = next(t for t in request('/api/attack-techniques') if t['techniqueId'] == 'T1190')
-    threat_data = {'systemAssetId': system['id'], 'attackTechniqueId': technique['id'],
-                   'scenario': 'Smoke SQL injection', 'likelihood': 3}
-    threat = request('/api/system-threats', 'POST', threat_data, 201)
-    risk_path = '/api/risks/' + str(threat['id'])
-    risk = request(risk_path)
-    assert risk['riskScore'] == 7.5 and risk['riskLevel'] == 'Medium'
-    assert len(risk['businessProcesses']) == 1 and len(risk['businessAssets']) == 2
-    assert {c['number'] for c in risk['cisControls']} == {7, 16, 18}
-    control_path = '/api/threat-controls/' + str(threat['id']) + '/7'
-    request(control_path, 'PUT', {'isRecommended': False, 'comment': 'Begrundet fravalg'})
-    assert 7 not in [c['number'] for c in request(risk_path)['cisControls']]
-    request(control_path, 'PUT', {'isRecommended': True, 'comment': 'Tilvalgt igen'})
-    request('/api/system-threats/' + str(threat['id']), 'PUT', threat_data)
-    assert next(c for c in request('/api/threat-controls') if
-                c['systemThreatId'] == threat['id'] and c['cisControlId'] == 7)['comment'] == 'Tilvalgt igen'
-    before = next(p for p in request('/api/cis-priorities') if p['control']['number'] == 7)
-    request(control_path, 'PUT', {'isRecommended': False})
-    after = next(p for p in request('/api/cis-priorities') if p['control']['number'] == 7)
-    assert before['weightedRiskScore'] - after['weightedRiskScore'] == 7.5
-    priorities = request('/api/cis-priorities')
-    assert abs(sum(p['share'] for p in priorities) - 1) < 0.0001
-    for blast, likelihood, score, level in [(1, 5, 5, 'Low'), (1.5, 4, 6, 'Medium'),
-                                           (2.5, 5, 12.5, 'High'), (4, 5, 20, 'Critical'),
-                                           (5, 5, 25, 'Critical')]:
-        request('/api/system-assets/' + str(system['id']), 'PUT', {
-            'name': 'Smoke WEB01', 'assetType': 'Server', 'blastRadius': blast,
-            'blastRadiusReason': 'Faglig vurdering'})
-        threat_data['likelihood'] = likelihood
-        request('/api/system-threats/' + str(threat['id']), 'PUT', threat_data)
-        risk = request(risk_path)
-        assert (risk['riskScore'], risk['riskLevel']) == (score, level)
-    threat_data['attackTechniqueId'] = next(t['id'] for t in request('/api/attack-techniques')
-                                          if t['techniqueId'] == 'T1078')
-    request('/api/system-threats/' + str(threat['id']), 'PUT', threat_data)
-    assert {c['number'] for c in request(risk_path)['cisControls']} == {5, 6, 8}
-    request('/api/system-threats', 'POST', dict(threat_data, likelihood=6), 400)
-    request('/api/system-threats', 'POST', dict(threat_data, systemAssetId=-1), 400)
-    request('/api/asset-mappings/' + str(mapping['id']), 'DELETE', status=204)
-    request('/api/system-access/' + str(access['id']), 'DELETE', status=204)
-    request('/api/system-threats/' + str(threat['id']), 'DELETE', status=204)
-    request(risk_path, status=404)
-    assert not any(c['systemThreatId'] == threat['id'] for c in request('/api/threat-controls'))
+    assert 'zone' not in summary
+    request('/api/business-asset-relations/' + str(business_relation['id']), 'DELETE', status=204)
+    assert request('/api/risks') == []
     request('/api/business-assets/' + str(assets[0]['id']), 'DELETE', status=204)
-    print('PASS: 10 pages, static assets, catalogs, CRUD, all CIA combinations, validation,')
-    print('      unique process consequences, fractional risks, thresholds, controls, priorities and cascades.')
+    asset_ids.remove(assets[0]['id'])
+    request('/api/system-assets/' + str(target['id']), 'DELETE', status=204)
+    system_ids.remove(target['id'])
+    assert not any(r['id'] == system_relation['id'] for r in request('/api/system-asset-relations'))
+    print('PASS: Asset Model relation CRUD, filters, direction, validation and cascades; 10 pages, static assets, catalogs, CRUD, all CIA combinations, validation,')
+    print('      catalogs and cascades.')
 finally:
     for identity in system_ids:
         request('/api/system-assets/' + str(identity), 'DELETE', status=204)
     for identity in process_ids:
         request('/api/business-processes/' + str(identity), 'DELETE', status=204)
+    for identity in asset_ids:
+        request('/api/business-assets/' + str(identity), 'DELETE', status=204)

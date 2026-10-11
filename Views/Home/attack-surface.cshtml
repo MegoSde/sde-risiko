@@ -1,0 +1,16 @@
+<p>Hvilke assets kan en angriber realistisk få en første adgang til, og gennem hvilken eksponering?</p>
+<section aria-label="Attack Surface oversigt">
+    <div class="cards"><div>System assets: <strong id="surface-total">0</strong></div><div>Attack surface: <strong id="surface-selected">0</strong></div></div>
+    <dl id="surface-summary" class="surface-summary"></dl>
+</section>
+<section aria-label="Filtre">
+    <div class="surface-filters">
+        <label>Type<select id="surface-type"><option value="">Alle typer</option></select></label>
+        <label>Netværk / placering<select id="surface-network"><option value="">Alle placeringer</option><option value="none">Uden direkte placering</option></select></label>
+        <label class="check"><input id="surface-only" type="checkbox">Kun valgte attack-surface-assets</label>
+    </div>
+    <p class="muted">Placering viser kun direkte LocatedIn-relationer til Network-assets. Markering og eksponering vælges manuelt.</p>
+    <p id="surface-count" role="status"></p>
+</section>
+<div id="surface-assets" class="cards surface-assets"></div>
+<p id="surface-empty" hidden>Ingen assets matcher filtrene. Assets oprettes i <a href="/asset-model">Asset Model</a>.</p>

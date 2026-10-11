@@ -92,7 +92,6 @@ window.RiskApp = (() => {
     "confidentiality",
     "integrity",
     "availability",
-    "blastRadius",
     "likelihood",
   ]);
   function bindForm(selector, resource, onSaved) {
@@ -148,76 +147,38 @@ window.RiskApp = (() => {
         });
     });
   }
-  function risksTable(rows) {
-    return table(
-      [
-        "Systemasset",
-        "ATT&CK",
-        "Blast Radius",
-        "Likelihood",
-        "Score",
-        "Niveau",
-        "Controls",
-        "Detaljer",
-      ],
-      rows.map((r) => [
-        esc(r.systemAsset.name),
-        esc(r.technique.techniqueId + " – " + r.technique.name),
-        number(r.blastRadius),
-        number(r.likelihood),
-        number(r.riskScore),
-        '<span class="badge ' +
-          r.riskLevel.toLowerCase() +
-          '">' +
-          r.riskLevel +
-          "</span>",
-        r.cisControls.map((c) => "CIS " + c.number).join(", "),
-        "<details><summary>Vis grundlag</summary><dl><dt>Processer</dt><dd>" +
-          esc(
-            r.businessProcesses
-              .map((p) => p.name + " (" + number(p.consequence) + ")")
-              .join(", ") || "Ingen mapping",
-          ) +
-          "</dd><dt>Forretningsassets</dt><dd>" +
-          esc(
-            r.businessAssets.map((a) => a.name).join(", ") || "Ingen mapping",
-          ) +
-          "</dd><dt>Scenarie</dt><dd>" +
-          esc(r.scenario) +
-          "</dd><dt>Blast Radius-begrundelse</dt><dd>" +
-          esc(r.systemAsset.blastRadiusReason || "Ikke angivet") +
-          "</dd><dt>Tactic</dt><dd>" +
-          esc(r.technique.tactic) +
-          "</dd><dt>CIS Controls</dt><dd>" +
-          esc(
-            r.cisControls.map((c) => c.number + " – " + c.name).join(", ") ||
-              "Ingen valgt",
-          ) +
-          '</dd></dl><a href="' +
-          esc(r.technique.mitreUrl) +
-          '" target="_blank" rel="noopener">Læs teknikken hos MITRE</a></details>',
-      ]),
-    );
+  function riskScenarioTable(rows, compact = false, selectedId = null) {
+    if (!rows.length) return '<p class="empty">Ingen scenarier her. Opret startkomponenter fra Attack Surface på Threat Analysis, eller vælg en anden matrixcelle.</p>';
+    const headers = compact ? ["Entry Point", "ATT&CK", "Consequence Index", "Scenario Likelihood", "Risk Score", "Risk Level"] : ["Entry Point", "Initial ATT&CK", "Initial Likelihood", "Paths", "Reachable Business Assets", "Accumulated Consequence", "Consequence Index", "Scenario Likelihood", "Risk Score", "Risk Level"];
+    return '<div class="table-scroll"><table class="risk-scenarios"><thead><tr>' + headers.map(h => `<th scope="col">${esc(h)}</th>`).join("") + '</tr></thead><tbody>' + rows.map(r => {
+      const first = r.initialAttackComponent;
+      const cells = [`<button type="button" data-risk="${r.id}" aria-expanded="${r.id === selectedId}" aria-controls="risk-details">${esc(first.systemAssetName)}</button>`, `<span title="${esc(first.techniqueName)}">${esc(first.techniqueId)}</span>`];
+      if (!compact) cells.push(first.likelihood, r.paths.length, r.reachableBusinessAssets.length, number(r.accumulatedConsequence));
+      cells.push(r.consequenceIndex, r.scenarioLikelihood, r.riskScore, `<span class="badge ${r.riskLevel.toLowerCase()}">${esc(r.riskLevel)}</span>`);
+      return `<tr data-risk="${r.id}">${cells.map(c => `<td>${c}</td>`).join("")}</tr>`;
+    }).join("") + '</tbody></table></div>';
   }
-  function priorityTable(rows) {
-    return table(
-      ["CIS Control", "Navn", "Fund", "Vægtet score", "Gennemsnit", "Andel"],
-      rows.map((r) => [
-        "CIS " + r.control.number,
-        esc(r.control.name),
-        number(r.findings),
-        number(r.weightedRiskScore) +
-          '<meter min="0" max="' +
-          Math.max(1, ...rows.map((x) => x.weightedRiskScore)) +
-          '" value="' +
-          r.weightedRiskScore +
-          '">' +
-          number(r.weightedRiskScore) +
-          "</meter>",
-        number(r.averageRiskScore),
-        number(r.share * 100) + " %",
-      ]),
-    );
+  function riskScenarioDetails(r) {
+    const first = r.initialAttackComponent;
+    const componentLabel = c => `${c.systemAssetName} / ${c.techniqueId} / P${c.likelihood}`;
+    const paths = r.paths.map(path => {
+      const chain = path.components.map((c, i) => `<span title="${esc(c.techniqueName)}">${esc(componentLabel(c))}</span>` + (i < path.components.length - 1 ? ` <span class="muted">—${esc(path.connections[i].relationType)}→</span> ` : "")).join("");
+      const cycle = path.cycleToComponentId ? path.components.find(c => c.id === path.cycleToComponentId) : null;
+      return `<li><h3>Path ${path.number}</h3><p class="risk-path">${chain}${cycle ? ` <span class="muted">↻ ${esc(componentLabel(cycle))} (cycle: path stoppet før gentagelse)</span>` : ""}</p><p>PathLikelihood = MIN(${path.components.map(c => c.likelihood).join(", ")}) = <strong>${path.pathLikelihood}</strong></p></li>`;
+    }).join("");
+    const assets = table(["Business Asset", "Business Processes og konsekvenser", "Asset consequence", "Nået via"], r.reachableBusinessAssets.map(a => [esc(a.name), a.businessProcesses.length ? a.businessProcesses.map(p => `${esc(p.name)} (${number(p.consequence)})`).join("<br>") : "Ingen procestilknytning (0)", `${a.businessProcesses.map(p => number(p.consequence)).join(" + ") || "0"} = <strong>${number(a.consequence)}</strong>`, esc([...new Map(r.paths.flatMap(p => p.components).filter(c => a.reachedViaSystemAssetIds.includes(c.systemAssetId)).map(c => [c.systemAssetId, c.systemAssetName])).values()].join(", "))]));
+    return `<h2>${esc(first.systemAssetName)} · ${esc(first.techniqueId)} – ${esc(first.techniqueName)}</h2><p>Initial Likelihood: ${first.likelihood}</p><p>${esc(first.comment)}</p><h3>Attack Paths</h3><p>Kun afsluttede paths medtages: en slutkomponent eller en cycle, som stoppes før en komponent besøges igen. En startkomponent uden forbindelser udgør ét path.</p><ol class="risk-paths">${paths}</ol><h3>Reachable Business Assets</h3><p>Hvert asset tælles én gang, selv hvis flere paths eller systemer når det. Asset consequence er summen fra dets tilknyttede processer.</p>${assets}<dl class="risk-calculations"><dt>Accumulated Consequence</dt><dd>SUM af distinct nåede Business Assets: ${r.reachableBusinessAssets.map(a => number(a.consequence)).join(" + ") || "0"} = <strong>${number(r.accumulatedConsequence)}</strong></dd><dt>Maximum Consequence</dt><dd>SUM af konsekvens for alle distinct Business Assets i modellen = <strong>${number(r.maximumConsequence)}</strong></dd><dt>Impact Ratio</dt><dd>${r.maximumConsequence === 0 ? "Samlet konsekvens er 0. Division springes over; Impact Ratio sættes til <strong>0 %</strong>." : `${number(r.accumulatedConsequence)} / ${number(r.maximumConsequence)} = <strong>${number(r.impactRatio * 100)} %</strong>`}</dd><dt>Consequence Index</dt><dd>0–20 % → 1; &gt;20–40 % → 2; &gt;40–60 % → 3; &gt;60–80 % → 4; &gt;80–100 % → 5. Resultat: <strong>${r.consequenceIndex}</strong></dd><dt>Scenario Likelihood</dt><dd>MAX(${r.paths.map(p => p.pathLikelihood).join(", ")}) = <strong>${r.scenarioLikelihood}</strong></dd><dt>Risk Score</dt><dd>Consequence Index × Scenario Likelihood = ${r.consequenceIndex} × ${r.scenarioLikelihood} = <strong>${r.riskScore}</strong> (${esc(r.riskLevel)})</dd></dl>`;
+  }
+  function bindRiskScenarios(target, details, find, selected) {
+    target.addEventListener("click", event => {
+      const clicked = event.target.closest("[data-risk]"); if (!clicked) return;
+      const id = Number(clicked.dataset.risk), row = find(id); if (!row) return;
+      selected(id);
+      target.querySelectorAll("button[data-risk]").forEach(button => button.setAttribute("aria-expanded", String(Number(button.dataset.risk) === id)));
+      details.innerHTML = riskScenarioDetails(row); details.hidden = false;
+      details.focus({ preventScroll: true });
+      details.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
   async function systemForm(onSaved) {
     return bindForm("#system-form", "system-assets", onSaved);
@@ -235,8 +196,9 @@ window.RiskApp = (() => {
     fill,
     bindForm,
     bindActions,
-    risksTable,
-    priorityTable,
     systemForm,
+    riskScenarioTable,
+    riskScenarioDetails,
+    bindRiskScenarios,
   };
 })();

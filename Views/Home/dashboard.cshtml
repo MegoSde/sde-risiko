@@ -1,1 +1,34 @@
-<p>Arbejd fra forretningsbehov til begrundede sikkerhedsprioriteter.</p><section id="stats" class="cards" aria-label="Nøgletal"></section><h2>Workflow</h2><ol class="cards workflow">@foreach(var item in AlpacaMedic.Controllers.HomeController.Pages.Skip(1)){<li><a href="/@item.Slug">@item.Title</a></li>}</ol><h2>Hyppigste CIS Controls</h2><div id="common-controls"></div>
+@{
+    var descriptions = new Dictionary<string, string> {
+        ["business-analysis"] = "Beskriv processer, CIA-konsekvenser og fælles Business Assets.",
+        ["asset-model"] = "Beskriv assets og deres retningsbestemte relationer.",
+        ["attack-surface"] = "Udvælg angrebspunkter og deres eksponering.",
+        ["threat-analysis"] = "Vurder asset + ATT&CK én gang, og forbind Attack Components.",
+        ["controls"] = "Vælg CIS Controls for hver Attack Component.",
+        ["risk-analysis"] = "Se paths, berørte Business Assets og beregnet risiko.",
+        ["risk-matrix"] = "Sammenlign scenarier efter Scenario Likelihood og Consequence Index.",
+        ["cis-priorities"] = "Se hvilke CIS Controls der er valgt på flest komponenter.",
+        ["report"] = "Saml analysen i en rapport."
+    };
+}
+<p>Fra forretningsprocesser og assets til angrebspunkter, attack paths og beregnet risiko.</p>
+<button id="refresh-dashboard" type="button">Opdatér overblik</button>
+<section id="stats" class="cards" aria-label="Nøgletal"></section>
+<h2>Risikoverblik</h2>
+<p>Ét scenarie pr. initial Attack Component på et valgt Attack Surface asset. Risk Score = Consequence Index × Scenario Likelihood.</p>
+<div id="risk-levels" class="cards" aria-label="Scenarier efter risikoniveau"></div>
+<p id="assessment-status" role="status"></p>
+<h3>Højest vurderede scenarier</h3>
+<div id="top-risks"></div>
+<section id="risk-details" tabindex="-1" hidden aria-label="Scenariedetaljer"></section>
+<p><a href="/risk-analysis">Se alle risikoscenarier</a> · <a href="/risk-matrix">Åbn Risk Matrix</a></p>
+<h2>Workflow</h2>
+<ol class="cards workflow">
+@foreach (var item in AlpacaMedic.Controllers.HomeController.Pages.Skip(1)) {
+    <li><a href="/@item.Slug">@item.Title</a><p>@descriptions[item.Slug]</p></li>
+}
+</ol>
+<h2>Hyppigst valgte CIS Controls</h2>
+<p>Antal Attack Components med den pågældende kontrol valgt.</p>
+<div id="common-controls"></div>
+<p><a href="/controls">Redigér valgte kontroller</a> · <a href="/cis-priorities">Se CIS Priorities</a></p>

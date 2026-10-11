@@ -16,6 +16,139 @@ namespace AlpacaMedic.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
+            modelBuilder.Entity("AlpacaMedic.Models.AttackComponent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AttackTechniqueId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsInitial")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Likelihood")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SystemAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttackTechniqueId");
+
+                    b.HasIndex("SystemAssetId", "AttackTechniqueId")
+                        .IsUnique();
+
+                    b.ToTable("AttackComponents");
+                });
+
+            modelBuilder.Entity("AlpacaMedic.Models.AttackComponentCisControl", b =>
+                {
+                    b.Property<int>("AttackComponentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CisControlId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsRecommended")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("AttackComponentId", "CisControlId");
+
+                    b.HasIndex("CisControlId");
+
+                    b.ToTable("ComponentControls");
+                });
+
+            modelBuilder.Entity("AlpacaMedic.Models.AttackConnection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FromAttackComponentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SystemAssetRelationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ToAttackComponentId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SystemAssetRelationId");
+
+                    b.HasIndex("ToAttackComponentId");
+
+                    b.HasIndex("FromAttackComponentId", "ToAttackComponentId", "SystemAssetRelationId")
+                        .IsUnique();
+
+                    b.ToTable("AttackConnections");
+                });
+
+            modelBuilder.Entity("AlpacaMedic.Models.AttackSurfaceEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExposureType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsExposed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SystemAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SystemAssetId")
+                        .IsUnique();
+
+                    b.ToTable("AttackSurfaceEntries");
+                });
+
+            modelBuilder.Entity("AlpacaMedic.Models.AttackTactic", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ShortName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShortName")
+                        .IsUnique();
+
+                    b.ToTable("AttackTactics");
+                });
+
             modelBuilder.Entity("AlpacaMedic.Models.AttackTechnique", b =>
                 {
                     b.Property<int>("Id")
@@ -26,11 +159,21 @@ namespace AlpacaMedic.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsSubTechnique")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("MitreUrl")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ParentTechniqueId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Platforms")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -43,6 +186,9 @@ namespace AlpacaMedic.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TechniqueId")
+                        .IsUnique();
 
                     b.ToTable("AttackTechniques");
                 });
@@ -62,13 +208,25 @@ namespace AlpacaMedic.Data.Migrations
                     b.ToTable("TechniqueControls");
                 });
 
+            modelBuilder.Entity("AlpacaMedic.Models.AttackTechniqueTactic", b =>
+                {
+                    b.Property<int>("AttackTechniqueId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AttackTacticId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("AttackTechniqueId", "AttackTacticId");
+
+                    b.HasIndex("AttackTacticId");
+
+                    b.ToTable("AttackTechniqueTactics");
+                });
+
             modelBuilder.Entity("AlpacaMedic.Models.BusinessAsset", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("BusinessProcessId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
@@ -79,14 +237,18 @@ namespace AlpacaMedic.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("NormalizedName")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("BusinessProcessId");
+                    b.HasIndex("NormalizedName")
+                        .IsUnique();
 
                     b.ToTable("BusinessAssets");
                 });
 
-            modelBuilder.Entity("AlpacaMedic.Models.BusinessAssetSystemAsset", b =>
+            modelBuilder.Entity("AlpacaMedic.Models.BusinessAssetSystemRelation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -95,6 +257,14 @@ namespace AlpacaMedic.Data.Migrations
                     b.Property<int>("BusinessAssetId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RelationType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("SystemAssetId")
                         .HasColumnType("INTEGER");
 
@@ -102,10 +272,10 @@ namespace AlpacaMedic.Data.Migrations
 
                     b.HasIndex("SystemAssetId");
 
-                    b.HasIndex("BusinessAssetId", "SystemAssetId")
+                    b.HasIndex("BusinessAssetId", "SystemAssetId", "RelationType")
                         .IsUnique();
 
-                    b.ToTable("AssetMappings");
+                    b.ToTable("BusinessAssetRelations");
                 });
 
             modelBuilder.Entity("AlpacaMedic.Models.BusinessProcess", b =>
@@ -140,6 +310,21 @@ namespace AlpacaMedic.Data.Migrations
                     b.ToTable("BusinessProcesses");
                 });
 
+            modelBuilder.Entity("AlpacaMedic.Models.BusinessProcessAsset", b =>
+                {
+                    b.Property<int>("BusinessProcessId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BusinessAssetId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("BusinessProcessId", "BusinessAssetId");
+
+                    b.HasIndex("BusinessAssetId");
+
+                    b.ToTable("BusinessProcessAssets");
+                });
+
             modelBuilder.Entity("AlpacaMedic.Models.CisControl", b =>
                 {
                     b.Property<int>("Id")
@@ -172,13 +357,6 @@ namespace AlpacaMedic.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("BlastRadius")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("BlastRadiusReason")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -187,22 +365,22 @@ namespace AlpacaMedic.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Zone")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
 
                     b.ToTable("SystemAssets");
                 });
 
-            modelBuilder.Entity("AlpacaMedic.Models.SystemAssetAccess", b =>
+            modelBuilder.Entity("AlpacaMedic.Models.SystemAssetRelation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RelationType")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -216,60 +394,70 @@ namespace AlpacaMedic.Data.Migrations
 
                     b.HasIndex("TargetSystemAssetId");
 
-                    b.HasIndex("SourceSystemAssetId", "TargetSystemAssetId")
+                    b.HasIndex("SourceSystemAssetId", "TargetSystemAssetId", "RelationType")
                         .IsUnique();
 
-                    b.ToTable("SystemAccess");
+                    b.ToTable("SystemAssetRelations");
                 });
 
-            modelBuilder.Entity("AlpacaMedic.Models.SystemThreat", b =>
+            modelBuilder.Entity("AlpacaMedic.Models.AttackComponent", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    b.HasOne("AlpacaMedic.Models.AttackTechnique", null)
+                        .WithMany()
+                        .HasForeignKey("AttackTechniqueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<int>("AttackTechniqueId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Likelihood")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Scenario")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SystemAssetId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AttackTechniqueId");
-
-                    b.HasIndex("SystemAssetId");
-
-                    b.ToTable("SystemThreats");
+                    b.HasOne("AlpacaMedic.Models.SystemAsset", null)
+                        .WithMany()
+                        .HasForeignKey("SystemAssetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("AlpacaMedic.Models.ThreatCisControl", b =>
+            modelBuilder.Entity("AlpacaMedic.Models.AttackComponentCisControl", b =>
                 {
-                    b.Property<int>("SystemThreatId")
-                        .HasColumnType("INTEGER");
+                    b.HasOne("AlpacaMedic.Models.AttackComponent", null)
+                        .WithMany()
+                        .HasForeignKey("AttackComponentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<int>("CisControlId")
-                        .HasColumnType("INTEGER");
+                    b.HasOne("AlpacaMedic.Models.CisControl", null)
+                        .WithMany()
+                        .HasForeignKey("CisControlId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
 
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+            modelBuilder.Entity("AlpacaMedic.Models.AttackConnection", b =>
+                {
+                    b.HasOne("AlpacaMedic.Models.AttackComponent", null)
+                        .WithMany()
+                        .HasForeignKey("FromAttackComponentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<bool>("IsRecommended")
-                        .HasColumnType("INTEGER");
+                    b.HasOne("AlpacaMedic.Models.SystemAssetRelation", null)
+                        .WithMany()
+                        .HasForeignKey("SystemAssetRelationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasKey("SystemThreatId", "CisControlId");
+                    b.HasOne("AlpacaMedic.Models.AttackComponent", null)
+                        .WithMany()
+                        .HasForeignKey("ToAttackComponentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
 
-                    b.HasIndex("CisControlId");
-
-                    b.ToTable("ThreatControls");
+            modelBuilder.Entity("AlpacaMedic.Models.AttackSurfaceEntry", b =>
+                {
+                    b.HasOne("AlpacaMedic.Models.SystemAsset", null)
+                        .WithMany()
+                        .HasForeignKey("SystemAssetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AlpacaMedic.Models.AttackTechniqueCisControl", b =>
@@ -287,16 +475,22 @@ namespace AlpacaMedic.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AlpacaMedic.Models.BusinessAsset", b =>
+            modelBuilder.Entity("AlpacaMedic.Models.AttackTechniqueTactic", b =>
                 {
-                    b.HasOne("AlpacaMedic.Models.BusinessProcess", null)
+                    b.HasOne("AlpacaMedic.Models.AttackTactic", null)
                         .WithMany()
-                        .HasForeignKey("BusinessProcessId")
+                        .HasForeignKey("AttackTacticId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AlpacaMedic.Models.AttackTechnique", null)
+                        .WithMany()
+                        .HasForeignKey("AttackTechniqueId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AlpacaMedic.Models.BusinessAssetSystemAsset", b =>
+            modelBuilder.Entity("AlpacaMedic.Models.BusinessAssetSystemRelation", b =>
                 {
                     b.HasOne("AlpacaMedic.Models.BusinessAsset", null)
                         .WithMany()
@@ -311,7 +505,22 @@ namespace AlpacaMedic.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("AlpacaMedic.Models.SystemAssetAccess", b =>
+            modelBuilder.Entity("AlpacaMedic.Models.BusinessProcessAsset", b =>
+                {
+                    b.HasOne("AlpacaMedic.Models.BusinessAsset", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessAssetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AlpacaMedic.Models.BusinessProcess", null)
+                        .WithMany()
+                        .HasForeignKey("BusinessProcessId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AlpacaMedic.Models.SystemAssetRelation", b =>
                 {
                     b.HasOne("AlpacaMedic.Models.SystemAsset", null)
                         .WithMany()
@@ -322,36 +531,6 @@ namespace AlpacaMedic.Data.Migrations
                     b.HasOne("AlpacaMedic.Models.SystemAsset", null)
                         .WithMany()
                         .HasForeignKey("TargetSystemAssetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("AlpacaMedic.Models.SystemThreat", b =>
-                {
-                    b.HasOne("AlpacaMedic.Models.AttackTechnique", null)
-                        .WithMany()
-                        .HasForeignKey("AttackTechniqueId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AlpacaMedic.Models.SystemAsset", null)
-                        .WithMany()
-                        .HasForeignKey("SystemAssetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("AlpacaMedic.Models.ThreatCisControl", b =>
-                {
-                    b.HasOne("AlpacaMedic.Models.CisControl", null)
-                        .WithMany()
-                        .HasForeignKey("CisControlId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AlpacaMedic.Models.SystemThreat", null)
-                        .WithMany()
-                        .HasForeignKey("SystemThreatId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

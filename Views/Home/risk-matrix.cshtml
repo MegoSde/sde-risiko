@@ -1,7 +1,9 @@
-<p>Klik på en celle for at filtrere risici. Halve Blast Radius-værdier placeres i næste hele række (fx 2,5 → 3); den præcise værdi og score bevares i listen.</p>
-<div id="matrix">
-</div>
-<button id="clear-filter" type="button">Vis alle risici</button>
-<h2 id="filter-label">Alle risici</h2>
-<div id="risk-list">
-</div>
+<p>X: Scenario Likelihood (1–5). Y: Consequence Index (1–5). Hvert scenarie fra Risk Analysis ligger i præcis én celle.</p>
+<p>Klik på en celle for at vise dens scenarier. Klik på et scenarie for at se beregningsgrundlaget.</p>
+<button id="refresh-risks" type="button">Opdatér analyse</button>
+<div id="matrix" class="table-scroll"></div>
+<button id="clear-filter" type="button">Vis alle scenarier</button>
+<h2 id="filter-label">Alle scenarier</h2>
+<p id="risk-count" role="status"></p>
+<div id="risk-list"></div>
+<section id="risk-details" aria-label="Risikoscenariets beregninger" tabindex="-1" hidden></section>

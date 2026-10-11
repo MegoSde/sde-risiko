@@ -1,0 +1,25 @@
+<p>Beskriv et konkret angrebsscenarie for hvert fund. Sandsynlighed går fra 1 (lav) til 5 (høj).</p>
+<p>Ved skift af teknik erstattes fundets Controls med den nye tekniks katalogforslag.</p>
+<section>
+<h2>ATT&amp;CK-fund</h2>
+<form id="threat-form">
+<input type="hidden" name="id">
+<label>Systemasset<select name="systemAssetId" required>
+</select>
+</label>
+<label>ATT&amp;CK-teknik<select name="attackTechniqueId" required>
+</select>
+</label>
+<div id="technique-info">
+</div>
+<label>Scenarie<textarea name="scenario" required>
+</textarea>
+</label>
+<label>Sandsynlighed<input name="likelihood" type="number" min="1" max="5" value="1" required>
+</label>
+<button>Gem fund</button>
+<button type="reset">Annuller redigering</button>
+</form>
+</section>
+<div id="threat-list">
+</div>

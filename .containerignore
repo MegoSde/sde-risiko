@@ -1,0 +1,9 @@
+.git
+.agents
+.codex
+.aws
+bin
+obj
+data
+tests
+prompt.md

@@ -1,0 +1,396 @@
+:root {
+  --bg: #f5f7f9;
+  --surface: #fff;
+  --ink: #182d3a;
+  --muted: #50616e;
+  --line: #d7e0e6;
+  --accent: #165e70;
+  --low: #d9eee6;
+  --medium: #fff0c4;
+  --high: #ffd9b8;
+  --critical: #f7c7cd;
+  --radius: 6px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font:
+    16px/1.5 system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+header {
+  display: flex;
+  gap: 24px;
+  padding: 20px 30px;
+  background: var(--ink);
+  color: #fff;
+}
+header strong {
+  font-size: 1.3rem;
+}
+.shell {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 85vh;
+}
+nav {
+  padding: 22px 12px;
+  border-right: 1px solid var(--line);
+  background: var(--surface);
+}
+nav a {
+  display: block;
+  padding: 10px 14px;
+  margin: 3px 0;
+  border-radius: var(--radius);
+  color: var(--ink);
+  text-decoration: none;
+}
+nav a[aria-current="page"] {
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+a {
+  color: var(--accent);
+}
+main {
+  padding: 28px;
+  max-width: 1500px;
+  width: 100%;
+}
+h1 {
+  margin-top: 0;
+}
+h2 {
+  font-size: 1.2rem;
+}
+h3 {
+  font-size: 1.05rem;
+}
+section,
+article {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 18px 0;
+}
+label {
+  display: block;
+  margin: 12px 0;
+}
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+input:not([type="checkbox"]),
+select,
+textarea {
+  display: block;
+  width: 100%;
+  max-width: 650px;
+  border: 1px solid #9caeb8;
+  border-radius: 4px;
+  padding: 9px;
+  color: var(--ink);
+  background: var(--surface);
+}
+input[readonly] {
+  background: var(--bg);
+}
+textarea {
+  min-height: 85px;
+}
+button {
+  cursor: pointer;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: white;
+  border-radius: 5px;
+  padding: 7px 12px;
+  margin: 4px 3px 4px 0;
+}
+button[type="reset"] {
+  color: var(--accent);
+  background: white;
+}
+button.danger {
+  background: white;
+  border-color: #94333f;
+  color: #94333f;
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 3px solid #d58d20;
+  outline-offset: 3px;
+}
+.fields {
+  display: flex;
+  gap: 20px;
+  max-width: 650px;
+}
+.fields label {
+  flex: 1;
+  min-width: 0;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.cards article {
+  margin: 0;
+}
+.stat {
+  display: block;
+  font-size: 2rem;
+}
+.workflow {
+  padding-left: 25px;
+}
+.workflow li {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 20px;
+  border-radius: var(--radius);
+}
+.table-scroll {
+  overflow-x: auto;
+  margin: 18px 0;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: var(--surface);
+}
+th,
+td {
+  border: 1px solid var(--line);
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: #eaf0f4;
+}
+td p {
+  margin: 5px 0;
+  white-space: pre-wrap;
+}
+td details {
+  min-width: 160px;
+  max-width: 400px;
+}
+summary {
+  cursor: pointer;
+}
+dt {
+  font-weight: 600;
+}
+dd {
+  margin: 0 0 12px;
+  white-space: pre-wrap;
+}
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: var(--ink);
+}
+.low {
+  background: var(--low);
+}
+.medium {
+  background: var(--medium);
+}
+.high {
+  background: var(--high);
+}
+.critical {
+  background: var(--critical);
+}
+.check {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.check input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+fieldset {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 15px;
+}
+.access-row,
+.control-row {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 0 15px;
+}
+.matrix {
+  max-width: 850px;
+  table-layout: fixed;
+}
+.matrix th:first-child {
+  width: 190px;
+}
+.matrix td {
+  padding: 0;
+  text-align: center;
+}
+.matrix button {
+  width: 100%;
+  margin: 0;
+  min-height: 65px;
+  background: transparent;
+  color: var(--ink);
+  border: 0;
+  font-weight: 700;
+}
+.matrix button[aria-pressed="true"] {
+  outline: 3px solid var(--accent);
+  outline-offset: -4px;
+}
+caption {
+  text-align: left;
+  margin: 15px 0;
+}
+meter {
+  display: block;
+  width: 160px;
+  max-width: 100%;
+  height: 18px;
+}
+.empty {
+  color: var(--muted);
+}
+#feedback:empty {
+  display: none;
+}
+#feedback {
+  padding: 12px;
+  border-radius: var(--radius);
+}
+.success {
+  background: var(--low);
+}
+.error {
+  background: var(--critical);
+}
+footer {
+  padding: 20px 30px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+}
+.skip {
+  position: absolute;
+  top: -100px;
+  background: white;
+  padding: 10px;
+}
+.skip:focus {
+  top: 0;
+}
+@media (max-width: 800px) {
+  .shell {
+    display: block;
+  }
+  nav {
+    display: flex;
+    overflow-x: auto;
+    gap: 6px;
+  }
+  nav a {
+    white-space: nowrap;
+  }
+  main {
+    padding: 18px;
+  }
+  header {
+    flex-direction: column;
+    gap: 0;
+  }
+  .matrix th:first-child {
+    width: 115px;
+  }
+  .matrix th {
+    padding: 6px;
+  }
+  .fields {
+    gap: 8px;
+  }
+}
+@media print {
+  body {
+    background: white;
+    font-size: 10pt;
+  }
+  header,
+  nav,
+  footer,
+  #print-report,
+  #feedback,
+  .skip {
+    display: none;
+  }
+  .shell {
+    display: block;
+  }
+  main {
+    padding: 0;
+    max-width: none;
+  }
+  h2 {
+    break-after: avoid;
+  }
+  tr {
+    break-inside: avoid;
+  }
+  button {
+    display: none;
+  }
+  details {
+    display: block;
+  }
+  table {
+    font-size: 9pt;
+  }
+  .table-scroll {
+    overflow: visible;
+  }
+  meter {
+    display: none;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  section {
+    break-inside: avoid;
+  }
+  th,
+  td {
+    padding: 6px;
+  }
+}

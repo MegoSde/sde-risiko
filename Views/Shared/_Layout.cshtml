@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="da">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewData["Title"] · AlpacaMedic</title>
+    <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/common.js" defer></script>
+    <script src="/js/@(ViewData["Page"]).js" defer></script>
+</head>
+<body>
+    <a class="skip" href="#main">Gå til indhold</a>
+    <header>
+        <strong>AlpacaMedic</strong>
+        <span>Sårbarheds- og risikoanalyse</span>
+    </header>
+    <div class="shell">
+        <nav aria-label="Hovedmenu">
+            @foreach (var item in AlpacaMedic.Controllers.HomeController.Pages)
+            {
+                <a href="/@item.Slug" aria-current="@(ViewData["Page"]?.ToString() == item.Slug ? "page" : null)">@item.Title</a>
+            }
+        </nav>
+        <main id="main">
+            <h1>@ViewData["Title"]</h1>
+            <p id="feedback" role="status" aria-live="polite"></p>
+            @RenderBody()
+        </main>
+    </div>
+    <footer>Undervisningsmodel · ATT&amp;CK og CIS Controls · Vurderinger kræver faglig begrundelse</footer>
+</body>
+</html>

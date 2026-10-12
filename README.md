@@ -23,6 +23,17 @@ Containeren indeholder både webserver og SQLite; den bruger ingen eksterne serv
 
 ## Lokal udvikling
 
+På Ubuntu 22.04, 24.04, 25.10 eller 26.04 kan afhængigheder og det lokale ATT&CK-katalog installeres med:
+
+```bash
+./install.sh
+dotnet run
+```
+
+Scriptet bruger `sudo` til apt-installation, installerer .NET 10 SDK (inklusive ASP.NET Core-runtime), hvis det mangler, og henter den fastlagte Enterprise ATT&CK-version **19.2** fra MITRE til `Data/Seed/enterprise-attack.json`. På Ubuntu 22.04 tilføjes `ppa:dotnet/backports`; de øvrige versioner bruger Ubuntus pakkekilder. Se [Microsofts Ubuntu-installationsvejledning](https://learn.microsoft.com/dotnet/core/install/linux-ubuntu-install).
+
+Downloaden valideres som en STIX-bundle med aktive techniques, før den erstatter seed-filen. Scriptet kan køres igen og ændrer ikke SQLite-databasen. Et allerede importeret katalog genimporteres ikke ved startup. Ved Podman-brug skal image rebuildes efter download for at inkludere filen.
+
 Kræver .NET 10 SDK:
 
 ```bash
